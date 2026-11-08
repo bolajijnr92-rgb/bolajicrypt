@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BolajiCrypt</title>
+<style>
+:root{--bg:#0f1419;--panel:#161d26;--line:#263140;--text:#e6edf3;--muted:#8b98a8;--accent:#f2b84b;--onaccent:#1a1405;--ok:#6fd49a;--bad:#ff8a80;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--bg:#f4f6f8;--panel:#fff;--line:#d5dce4;--text:#18222d;--muted:#5b6978;--accent:#b8730a;--onaccent:#fff;--ok:#1d7a47;--bad:#b3261e;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Segoe UI",system-ui,sans-serif}
+header{padding:20px 24px 0;max-width:1000px;margin:0 auto}
+h1{margin:0;font-size:22px;font-weight:600;letter-spacing:.2px}
+header p{margin:2px 0 0;color:var(--muted);font-size:14px}
+nav{display:flex;gap:6px;margin:18px 0 0;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:10px 14px;font:inherit;cursor:pointer}
+nav button[aria-selected=true]{color:var(--text);border-bottom-color:var(--accent)}
+main{max-width:1000px;margin:0 auto;padding:20px 24px 40px}
+section{display:none;gap:16px;grid-template-columns:1fr 1fr}
+section.on{display:grid}
+@media (max-width:760px){section.on{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font:inherit}
+textarea{min-height:130px;resize:vertical;font-family:Consolas,"Courier New",monospace;font-size:14px}
+.out{min-height:130px;white-space:pre-wrap;word-break:break-all;font-family:Consolas,"Courier New",monospace;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button.b{background:var(--accent);color:var(--onaccent);border:0;border-radius:6px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}
+button.g{background:none;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px 14px;font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.st{margin-top:10px;font-size:13px;min-height:20px}
+.st.ok{color:var(--ok)}.st.bad{color:var(--bad)}
+.full{grid-column:1/-1}
+.note{color:var(--muted);font-size:13px;margin:10px 0 0}
+</style>
+</head>
+<body>
+<header>
+<h1>BolajiCrypt</h1>
+<p>Encrypt, hash and generate keys. Everything runs on your device, nothing is uploaded.</p>
+<nav role="tablist">
+<button role="tab" aria-selected="true" data-t="cipher">Cipher</button>
+<button role="tab" aria-selected="false" data-t="hash">Hash</button>
+<button role="tab" aria-selected="false" data-t="gen">Generate</button>
+</nav>
+</header>
+<main>
+
+<section id="cipher" class="on">
+<div class="card">
+<label for="cin">Text</label>
+<textarea id="cin" placeholder="Type a message to encrypt, or paste a token to decrypt"></textarea>
+<label for="cpw">Password</label>
+<input id="cpw" type="password" autocomplete="off">
+<div class="row">
+<button class="b" id="etxt">Encrypt text</button>
+<button class="g" id="dtxt">Decrypt text</button>
+</div>
+<label for="cfile">File</label>
+<input id="cfile" type="file">
+<div class="row">
+<button class="b" id="efile">Encrypt file</button>
+<button class="g" id="dfile">Decrypt file</button>
+</div>
+<div class="st" id="cst" role="status"></div>
+</div>
+<div class="card">
+<label>Result</label>
+<div class="out" id="cout"></div>
+<div class="row"><button class="g" id="ccopy">Copy result</button></div>
+<p class="note">AES-256-GCM with a key made from your password (PBKDF2, 600,000 rounds, random salt). A wrong password or edited data is always rejected.</p>
+</div>
+</section>
+
+<section id="hash">
+<div class="card">
+<label for="hin">Text</label>
+<textarea id="hin" placeholder="Type text to hash"></textarea>
+<label for="halg">Algorithm</label>
+<select id="halg"><option>SHA-256</option><option>SHA-384</option><option>SHA-512</option><option>SHA-1</option></select>
+<div class="row"><button class="b" id="htxt">Hash text</button></div>
+<label for="hfile">Or a file</label>
+<input id="hfile" type="file">
+<div class="row"><button class="g" id="hfbtn">Hash file</button></div>
+</div>
+<div class="card">
+<label>Digest (hex)</label>
+<div class="out" id="hout"></div>
+<div class="row"><button class="g" id="hcopy">Copy digest</button></div>
+<p class="note">A hash is one way: it cannot be decrypted. Use it to check that a file has not changed. SHA-1 is kept only for comparing old checksums.</p>
+</div>
+</section>
+
+<section id="gen">
+<div class="card">
+<label for="kbits">Random key size</label>
+<select id="kbits"><option value="16">128-bit</option><option value="24">192-bit</option><option value="32" selected>256-bit</option></select>
+<div class="row"><button class="b" id="gkey">Generate key</button></div>
+<label for="plen">Password length</label>
+<input id="plen" type="number" min="8" max="64" value="20">
+<label for="psym">Symbols</label>
+<select id="psym"><option value="1">Include symbols</option><option value="0">Letters and numbers only</option></select>
+<div class="row"><button class="b" id="gpw">Generate password</button></div>
+</div>
+<div class="card">
+<label>Result</label>
+<div class="out" id="gout"></div>
+<div class="row"><button class="g" id="gcopy">Copy result</button></div>
+<p class="note">Values come from the browser’s secure random generator.</p>
+</div>
+</section>
+
+</main>
+<script>
+const $=id=>document.getElementById(id),te=new TextEncoder(),td=new TextDecoder(),MAGIC=te.encode('CTW1');
+const hex=u=>[...new Uint8Array(u)].map(b=>b.toString(16).padStart(2,'0')).join('');
+const b64=u=>{let s='';u.forEach(c=>s+=String.fromCharCode(c));return btoa(s)};
+const unb64=s=>Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0));
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===b.dataset.t));
+});
+
+async function kdf(pw,salt){
+  const m=await crypto.subtle.importKey('raw',te.encode(pw),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function seal(data,pw){
+  const salt=rnd(16),iv=rnd(12);
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:MAGIC},await kdf(pw,salt),data));
+  const out=new Uint8Array(32+ct.length);
+  out.set(MAGIC);out.set(salt,4);out.set(iv,20);out.set(ct,32);
+  return out;
+}
+async function unseal(blob,pw){
+  if(blob.length<48||td.decode(blob.slice(0,4))!=='CTW1')throw new Error('This is not BolajiCrypt data.');
+  try{
+    return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:blob.slice(20,32),additionalData:MAGIC},await kdf(pw,blob.slice(4,20)),blob.slice(32)));
+  }catch(e){throw new Error('Wrong password, or the data was changed.')}
+}
+function say(msg,ok){const s=$('cst');s.textContent=msg;s.className='st '+(ok?'ok':'bad')}
+function need(){if(!$('cpw').value){say('Enter a password first.');return false}return true}
+function save(bytes,name){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes]));a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+async function run(fn){say('Working...',true);try{await fn()}catch(e){say(e.message||'Something went wrong.')}}
+
+$('etxt').onclick=()=>{if(!need())return;run(async()=>{
+  if(!$('cin').value){throw new Error('Type a message first.')}
+  $('cout').textContent=b64(await seal(te.encode($('cin').value),$('cpw').value));say('Encrypted. Copy the token to share it.',true);
+})};
+$('dtxt').onclick=()=>{if(!need())return;run(async()=>{
+  let blob;try{blob=unb64($('cin').value)}catch(e){throw new Error('That token is not valid. Paste it exactly as shown.')}
+  $('cout').textContent=td.decode(await unseal(blob,$('cpw').value));say('Decrypted.',true);
+})};
+$('efile').onclick=()=>{if(!need())return;run(async()=>{
+  const f=$('cfile').files[0];if(!f)throw new Error('Choose a file first.');
+  save(await seal(new Uint8Array(await f.arrayBuffer()),$('cpw').value),f.name+'.enc');say('Saved '+f.name+'.enc',true);
+})};
+$('dfile').onclick=()=>{if(!need())return;run(async()=>{
+  const f=$('cfile').files[0];if(!f)throw new Error('Choose a file first.');
+  const out=await unseal(new Uint8Array(await f.arrayBuffer()),$('cpw').value);
+  const name=f.name.endsWith('.enc')?f.name.slice(0,-4):f.name+'.dec';
+  save(out,name);say('Saved '+name,true);
+})};
+
+async function digest(buf){$('hout').textContent=hex(await crypto.subtle.digest($('halg').value,buf))}
+$('htxt').onclick=()=>digest(te.encode($('hin').value));
+$('hfbtn').onclick=async()=>{const f=$('hfile').files[0];if(!f){$('hout').textContent='Choose a file first.';return}digest(await f.arrayBuffer())};
+
+function pick(n){const lim=Math.floor(4294967296/n)*n;let v;do{v=crypto.getRandomValues(new Uint32Array(1))[0]}while(v>=lim);return v%n}
+$('gkey').onclick=()=>{$('gout').textContent=hex(rnd(+$('kbits').value))};
+$('gpw').onclick=()=>{
+  const set='abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'+($('psym').value==='1'?'!@#$%^&*-_=+?':'');
+  const n=Math.min(64,Math.max(8,+$('plen').value||20));
+  $('gout').textContent=Array.from({length:n},()=>set[pick(set.length)]).join('');
+};
+[['ccopy','cout'],['hcopy','hout'],['gcopy','gout']].forEach(([b,o])=>$(b).onclick=async()=>{
+  try{await navigator.clipboard.writeText($(o).textContent);$(b).textContent='Copied'}catch(e){$(b).textContent='Select and copy by hand'}
+  setTimeout(()=>$(b).textContent=b==='hcopy'?'Copy digest':'Copy result',1500);
+});
+</script>
+</body>
+</html>
